@@ -71,15 +71,21 @@ Visit 👉 http://localhost:3000
 Create a .env.local file in the project root and add the following keys:
 
 Variable	Description
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY	Clerk publishable key for authentication (public)
-CLERK_SECRET_KEY	Clerk secret key for server-side auth
-NEXT_PUBLIC_CLERK_SIGN_IN_URL	Custom sign-in route (default: /sign-in)
-NEXT_PUBLIC_CLERK_SIGN_UP_URL	Custom sign-up route (default: /sign-up)
-DATABASE_URL	Supabase Postgres connection string (pgbouncer)
-DIRECT_URL	Direct Postgres connection (for Prisma migrations)
-ARCJET_KEY	Arcjet API key for fraud/abuse protection
-RESEND_API_KEY	Resend API key for sending emails (alerts/notify)
-GEMINI_API_KEY	Google Gemini API key for AI/LLM functionality
+DATABASE_URL=
+DIRECT_URL=
+
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/onboarding
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/onboarding
+
+GEMINI_API_KEY=
+
+RESEND_API_KEY=
+
+ARCJET_KEY=
 
 ⚠️ Important:
 
