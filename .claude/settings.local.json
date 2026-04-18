@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prisma:*)",
+      "Bash(npx next:*)",
+      "Bash(node --check lib/services/snapshotService.js)",
+      "Bash(node --check lib/services/healthScoreService.js)",
+      "Bash(node --check lib/services/allocationService.js)",
+      "Bash(node --check lib/services/portfolioService.js)",
+      "Bash(node --check lib/services/netWorthService.js)",
+      "Bash(node --check lib/inngest/client.js)",
+      "Bash(node --check lib/inngest/function.js)",
+      "Bash(node --check app/api/inngest/route.js)",
+      "Bash(node --check app/api/test-snapshot/route.js)",
+      "Bash(node --input-type=module --eval \"import { Card } from './components/ui/card.jsx'; console.log\\('Card imported:', typeof Card\\)\")",
+      "Bash(NEXT_DEBUG_BUILD=1 npx next build --no-lint)",
+      "Bash(npm run:*)"
+    ]
+  }
+}

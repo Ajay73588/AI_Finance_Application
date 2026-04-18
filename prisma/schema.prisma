@@ -1,0 +1,233 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  clerkUserId   String    @unique // clerk user id
+  email         String    @unique
+  name          String?
+  imageUrl      String?
+  currency      String    @default("INR")
+  privacyMode   Boolean   @default(false)
+  transactions  Transaction[]
+  accounts      Account[]
+  budgets       Budget[]
+  goals         Goal[]
+  liabilities   Liability[]
+  snapshots     Snapshot[]
+  allocationTargets AllocationTarget[]
+  aiConversations AIConversation[]
+  insights      Insight[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@map("users")
+}
+
+model Account {
+  id           String        @id @default(uuid())
+  name         String
+  type         AccountType
+  balance      Decimal       @default(0) // will ask inital balance while creating an account
+  isDefault    Boolean       @default(false)
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Transaction {
+  id                String            @id @default(uuid())
+  type             TransactionType
+  amount           Decimal
+  description      String?
+  date             DateTime
+  category         String
+  receiptUrl       String?
+  isRecurring      Boolean           @default(false)
+  recurringInterval RecurringInterval? // Only used if isRecurring is true
+  nextRecurringDate DateTime?         // Next date for recurring transaction
+  lastProcessed    DateTime?         // Last time this recurring transaction was processed
+  status           TransactionStatus  @default(COMPLETED)
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId        String
+  account          Account           @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@index([userId])
+  @@index([accountId])
+  @@map("transactions")
+}
+
+
+model Budget {
+  id            String       @id @default(uuid())
+  amount        Decimal
+  category      String                    // e.g. Food, Transport, Entertainment
+  lastAlertSent DateTime?  // Track when the last alert was sent
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@unique([userId, category])
+  @@index([userId])
+  @@map("budgets")
+}
+
+model Goal {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String   // e.g. Retirement Fund, House Down Payment
+  targetAmount  Float
+  currentAmount Float    @default(0)
+  deadline      DateTime
+  status        GoalStatus @default(ACTIVE)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@map("goals")
+}
+
+model Liability {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String   // e.g. SBI Home Loan, Car Loan
+  type          LiabilityType
+  principalAmount Float
+  outstandingAmount Float
+  interestRate  Float
+  monthlyEMI    Float?
+  dueDate       DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@map("liabilities")
+}
+
+model Snapshot {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date         DateTime @default(now())
+  netWorth     Float
+  assets       Float
+  liabilities  Float
+  breakdown    Json?    // Per-asset-type breakdown
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([date])
+  @@map("snapshots")
+}
+
+model AllocationTarget {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type         String   // STOCK, MUTUAL_FUND, CRYPTO, REAL_ESTATE, CASH
+  percentage   Float
+
+  @@unique([userId, type])
+  @@index([userId])
+  @@map("allocation_targets")
+}
+
+model AIConversation {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action          String   // PORTFOLIO_ANALYSIS, SUGGEST_INVESTMENTS, CUSTOM_CHAT, etc.
+  messages        Json     // Array of { role, content, timestamp }
+  contextSnapshot Json?    // Frozen financial context at request time
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@map("ai_conversations")
+}
+
+model Insight {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // SPENDING_HIGH, SAVINGS_LOW, BUDGET_BREACH, etc.
+  message   String
+  severity  String   // LOW, MEDIUM, HIGH
+  metadata  Json?    // Additional data for the insight
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("insights")
+}
+
+model Asset {
+  id           String   @id @default(uuid())
+  userId       String
+  type         String   // stock, crypto, mutual_fund, real_estate, cash
+  name         String
+  symbol       String?
+  quantity     Float
+  buyPrice     Float
+  currentPrice Float?
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@map("Investment")
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum AccountType {
+  CURRENT
+  SAVINGS
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum RecurringInterval {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum GoalStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+}
+
+enum LiabilityType {
+  HOME_LOAN
+  CAR_LOAN
+  PERSONAL_LOAN
+  EDUCATION_LOAN
+  CREDIT_CARD
+  OTHER
+}
